@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Калькулятор - WASP{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Расчёт свойств воды и водяного пара</h5>
+        </div>
+        <div class="card-body">
+            <!-- Отладка -->
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    Форма содержит ошибки: {{ form.errors }}
+                </div>
+            {% endif %}
+            {% if error %}
+                <div class="alert alert-danger mt-4" role="alert">{{ error }}</div>
+            {% endif %}
+            {% if result %}
+                <div class="alert alert-info mt-4">Результаты получены!</div>
+            {% endif %}
+
+            <!-- Форма -->
+            <form method="post">
+                {% csrf_token %}
+                <!-- Режим -->
+                <div class="mb-3">
+                    <label for="mode" class="form-label">Режим:</label>
+                    <select id="mode" name="mode" class="form-select">
+                        <option value="saturation" {% if form.mode.value == 'saturation' %}selected{% endif %}>Линия насыщения</option>
+                        <option value="full" {% if form.mode.value == 'full' %}selected{% endif %}>Вся область</option>
+                    </select>
+                </div>
+
+                <!-- Параметры для Линии насыщения -->
+                <div class="mb-3">
+                    <label class="form-label">Параметры для линии насыщения:</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="calc_by" id="calcByP" value="P" {% if form.calc_by.value == 'P' or not form.calc_by.value %}checked{% endif %}>
+                        <label class="form-check-label" for="calcByP">Рассчитать по давлению (P)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="calc_by" id="calcByT" value="T" {% if form.calc_by.value == 'T' %}checked{% endif %}>
+                        <label class="form-check-label" for="calcByT">Рассчитать по температуре (T)</label>
+                    </div>
+                </div>
+
+                <!-- Параметры для Всей области -->
+                <div class="mb-3">
+                    <label class="form-label">Параметры для всей области:</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="param_type" id="paramP-H" value="P-H" {% if form.param_type.value == 'P-H' or not form.param_type.value %}checked{% endif %}>
+                        <label class="form-check-label" for="paramP-H">P-H (Давление и энтальпия)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="param_type" id="paramP-T-water" value="P-T-water" {% if form.param_type.value == 'P-T-water' %}checked{% endif %}>
+                        <label class="form-check-label" for="paramP-T-water">P-T (Давление и температура - вода)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="param_type" id="paramP-T-steam" value="P-T-steam" {% if form.param_type.value == 'P-T-steam' %}checked{% endif %}>
+                        <label class="form-check-label" for="paramP-T-steam">P-T (Давление и температура - сухой пар)</label>
+                    </div>
+                </div>
+
+                <!-- Ввод параметров -->
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="pressure" class="form-label">Давление P (МПа)</label>
+                            <input type="number" step="any" class="form-control" id="pressure" name="pressure" value="{{ form.pressure.value|default_if_none:'' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="temperature" class="form-label">Температура T (°C)</label>
+                            <input type="number" step="any" class="form-control" id="temperature" name="temperature" value="{{ form.temperature.value|default_if_none:'' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="enthalpy" class="form-label">Энтальпия H (кДж/кг)</label>
+                            <input type="number" step="any" class="form-control" id="enthalpy" name="enthalpy" value="{{ form.enthalpy.value|default_if_none:'' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Рассчитать</button>
+            </form>
+
+            <!-- Результаты для Линии насыщения -->
+            {% if result and form.mode.value == 'saturation' %}
+            <hr>
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <h6>Условия</h6>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item">Давление: {{ result.P|floatformat:4 }} МПа</li>
+                        <li class="list-group-item">Температура: {{ result.T|floatformat:2 }} °C</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>Вода</h6>
+                    <ul class="list-group">
+                        <li class="list-group-item">Энтальпия: {{ result.water.h|floatformat:2 }} кДж/кг</li>
+                        <li class="list-group-item">Энтропия: {{ result.water.s|floatformat:2 }} кДж/(кг·К)</li>
+                        <li class="list-group-item">Удельный объём: {{ result.water.v|floatformat:4 }} м³/кг</li>
+                        <li class="list-group-item">Плотность: {{ result.water.rho|floatformat:2 }} кг/м³</li>
+                        <li class="list-group-item">Динамическая вязкость: {{ result.water.mu|floatformat:6 }} Па·с</li>
+                        <li class="list-group-item">Кинематическая вязкость: {{ result.water.nu|floatformat:6 }} м²/с</li>
+                    </ul>
+                </div>
+                <div class="col-md-6 border-start">
+                    <h6>Пар</h6>
+                    <ul class="list-group">
+                        <li class="list-group-item">Энтальпия: {{ result.steam.h|floatformat:2 }} кДж/кг</li>
+                        <li class="list-group-item">Энтропия: {{ result.steam.s|floatformat:2 }} кДж/(кг·К)</li>
+                        <li class="list-group-item">Удельный объём: {{ result.steam.v|floatformat:4 }} м³/кг</li>
+                        <li class="list-group-item">Плотность: {{ result.steam.rho|floatformat:2 }} кг/м³</li>
+                        <li class="list-group-item">Динамическая вязкость: {{ result.steam.mu|floatformat:6 }} Па·с</li>
+                        <li class="list-group-item">Кинематическая вязкость: {{ result.steam.nu|floatformat:6 }} м²/с</li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Результаты для Вся область -->
+            {% if result and form.mode.value == 'full' %}
+            <hr>
+            <div class="mt-4">
+                <h6>Результаты</h6>
+                <ul class="list-group">
+                    <li class="list-group-item">Давление: {{ result.P|floatformat:4 }} МПа</li>
+                    <li class="list-group-item">Температура: {{ result.T|floatformat:2 }} °C</li>
+                    <li class="list-group-item">Энтальпия: {{ result.h|floatformat:2 }} кДж/кг</li>
+                    <li class="list-group-item">Энтропия: {{ result.s|floatformat:2 }} кДж/(кг·К)</li>
+                    <li class="list-group-item">Удельный объём: {{ result.v|floatformat:4 }} м³/кг</li>
+                    <li class="list-group-item">Плотность: {{ result.rho|floatformat:2 }} кг/м³</li>
+                    <li class="list-group-item">Степень сухости: {{ result.x|default:'N/A' }}</li>
+                    <li class="list-group-item">Динамическая вязкость: {{ result.mu|floatformat:6 }} Па·с</li>
+                    <li class="list-group-item">Кинематическая вязкость: {{ result.nu|floatformat:6 }} м²/с</li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

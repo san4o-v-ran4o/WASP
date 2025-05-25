@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Результаты - WASP{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h1>Результаты расчёта</h1>
+    <ul class="list-group mt-4">
+        <li class="list-group-item">Давление: {{ result.pressure }} МПа</li>
+        <li class="list-group-item">Температура: {{ result.temperature }} °C</li>
+        <li class="list-group-item">Энтальпия: {{ result.enthalpy }} кДж/кг</li>
+        <li class="list-group-item">Энтропия: {{ result.entropy }} кДж/(кг·К)</li>
+        <li class="list-group-item">Удельный объём: {{ result.specific_volume }} м³/кг</li>
+        <li class="list-group-item">Плотность: {{ result.density }} кг/м³</li>
+        <li class="list-group-item">Степень сухости: {{ result.quality }}</li>
+        <li class="list-group-item">Динамическая вязкость: {{ result.dynamic_viscosity }} Па·с</li>
+        <li class="list-group-item">Кинематическая вязкость: {{ result.kinematic_viscosity }} м²/с</li>
+    </ul>
+    <a href="{% url 'calculate' %}" class="btn btn-primary mt-3">Новый расчёт</a>
+</div>
+{% endblock %}

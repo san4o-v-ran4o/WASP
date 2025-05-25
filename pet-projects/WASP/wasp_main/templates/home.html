@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная - WASP{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h1>Рассчитать термодинамические свойства воды и водяного пара</h1>
+    <div class="mt-4">
+        <h3>Особенности:</h3>
+        <ul class="list-unstyled">
+            <li>- Не требует установки;</li>
+            <li>- Точный и простой калькулятор;</li>
+            <li>- Доступ с любого компьютера в мире.</li>
+        </ul>
+    </div>
+    <a href="{% url 'calculate' %}" class="btn btn-primary mt-3">Запустить калькулятор</a>
+</div>
+{% endblock %}
